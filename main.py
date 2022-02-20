@@ -1,31 +1,34 @@
 import threading
 import time
+import display
+from datetime import datetime
 
-def callback_0():
-	while(not evt.is_set()):
-		print("callback 0")
-		time.sleep(1)
+exit_evt = threading.Event()
+exit_evt.clear()
 
-def callback_1():
-	while(not evt.is_set()):
-		print("callback 1")
-		time.sleep(1)
+clk_face = display.Display(0x70, 1)
+clk_face.setup()
+clk_face.write_colon(True)
 
-t0 = threading.Thread(target=callback_0)
-t1 = threading.Thread(target=callback_1)
+cur_time = datetime.now()
 
-evt = threading.Event()
+def clk_main():
+    while(not exit_evt.is_set()):
+        cur_time = datetime.now()
 
-evt.clear()
+        if (cur_time.hour%12 < 10):
+            clk_face.write_digit(0, 0)
+            clk_face.write_digit(1, int(cur_time.hour%12))
+        else:
+            clk_face.write_digit(0, 1)
+            clk_face.write_digit(1, int((cur_time.hour%12)%10))
 
-t0.start()
-t1.start()
+        if (cur_time.minute < 10):
+            clk_face.write_digit(2, 0)
+            clk_face.write_digit(3, int(cur_time.minute))
+        else:
+            clk_face.write_digit(2, int(cur_time.minute/10))
+            clk_face.write_digit(3, int(cur_time.minute%10))
 
-for _ in range(3):
-	print("main")
-	time.sleep(1)
-
-evt.set()
-
-print("Done main")
-
+clk_thread = threading.Thread(target=clk_main)
+clk_thread.start()
