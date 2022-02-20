@@ -13,6 +13,8 @@
 import smbus
 import time
 
+# bitmaps - each bit maps to a,b,c,d,e,f,g,dot connections on single segment
+# place in array corresponds to number to display (i.e. bmaps[0] displays a zero, etc.)
 bmaps = [
     0b00111111,
     0b00000110,
