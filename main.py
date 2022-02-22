@@ -16,19 +16,22 @@ def clk_main():
     while(not exit_evt.is_set()):
         cur_time = datetime.now()
 
-        if (cur_time.hour%12 < 10):
-            clk_face.write_digit(0, 0)
-            clk_face.write_digit(1, int(cur_time.hour%12))
-        else:
-            clk_face.write_digit(0, 1)
-            clk_face.write_digit(1, int((cur_time.hour%12)%10))
+        pm = True if cur_time.hour >= 12 else False
 
-        if (cur_time.minute < 10):
-            clk_face.write_digit(2, 0)
-            clk_face.write_digit(3, int(cur_time.minute))
+        hour = int(cur_time.hour % 12)
+        minute = cur_time.minute
+
+        if hour == 0: hour = 12
+
+        if (hour < 10):
+            clk_face.write_digit(0, 0, False)
+            clk_face.write_digit(1, hour, False)
         else:
-            clk_face.write_digit(2, int(cur_time.minute/10))
-            clk_face.write_digit(3, int(cur_time.minute%10))
+            clk_face.write_digit(0, 1, False)
+            clk_face.write_digit(1, hour % 10, False)
+
+        clk_face.write_digit(2, int(minute / 10), False)
+        clk_face.write_digit(3, int(minute % 10), pm)
 
 clk_thread = threading.Thread(target=clk_main)
 clk_thread.start()

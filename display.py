@@ -29,9 +29,10 @@ bmaps = [
 ]
 
 digit_addr = [0x00, 0x02, 0x06, 0x08]
-col_addr = 0x04
-col_on = 0b00000010
-col_off = 0b00000000
+COL_ADDR = 0x04
+COL_ON = 0b00000010
+COL_OFF = 0b00000000
+DECIMAL = 0b10000000
 
 BKPK_I2C_ADDR = 0x70
 RPI_I2C_BUS = 1
@@ -47,16 +48,19 @@ class Display:
         self.i2c_bus.write_byte(self.addr, 0x81) # display on
         self.i2c_bus.write_byte(self.addr, 0xEF) # set brightness to max (15 == 0xF)
 
-    def write_digit(self, digit, num):
+    def write_digit(self, digit, num, decimal):
         if (digit < 0 or digit > 3 or num < 0 or num > 9):
             return
-        self.i2c_bus.write_byte_data(self.addr, digit_addr[digit], bmaps[num])
+        if (decimal):
+            self.i2c_bus.write_byte_data(self.addr, digit_addr[digit], bmaps[num] | DECIMAL)
+        else:
+            self.i2c_bus.write_byte_data(self.addr, digit_addr[digit], bmaps[num])
 
     def write_colon(self, enable):
         if (enable):
-            self.i2c_bus.write_byte_data(self.addr, col_addr, col_on)
+            self.i2c_bus.write_byte_data(self.addr, COL_ADDR, COL_ON)
         else:
-            self.i2c_bus.write_byte_data(self.addr, col_addr, col_off)
+            self.i2c_bus.write_byte_data(self.addr, COL_ADDR, COL_OFF)
 
 if __name__ == "__main__":
     print("TESTING SevenSegmentBackpack")
