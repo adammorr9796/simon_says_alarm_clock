@@ -57,11 +57,11 @@ def clk_main():
 
     while(not exit_evt.is_set()):
         if (MODE == 0):
-            updt_display();
-	elif (MODE == 1):
+            updt_display()
+        elif (MODE == 1):
             pass
-	elif (MODE == 2):
-            pass
+        elif (MODE == 2):
+            updt_display()
 
 def bttn_main():
     global MODE
