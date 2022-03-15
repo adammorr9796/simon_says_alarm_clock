@@ -25,6 +25,26 @@ BTTN_3 = 3
 
 MODE = 0       # 0 == CLK_MODE, 1 == ALRM_MODE, 2 == SIMON_MODE
 
+def updt_display():
+    cur_time = datetime.now()
+
+    pm = True if cur_time.hour >= 12 else False
+
+    hour = int(cur_time.hour % 12)
+    minute = cur_time.minute
+
+    if hour == 0: hour = 12
+
+    if (hour < 10):
+        clk_face.write_digit(0, 0, False)
+        clk_face.write_digit(1, hour, False)
+    else:
+        clk_face.write_digit(0, 1, False)
+        clk_face.write_digit(1, hour % 10, False)
+
+    clk_face.write_digit(2, int(minute / 10), False)
+    clk_face.write_digit(3, int(minute % 10), pm)
+
 def bttn_callbk(channel):
     global cur_bttn
     cur_bttn = channel
@@ -33,25 +53,15 @@ def bttn_callbk(channel):
 def clk_main():
     print("clk_main started")
 
+    global MODE
+
     while(not exit_evt.is_set()):
-        cur_time = datetime.now()
-
-        pm = True if cur_time.hour >= 12 else False
-
-        hour = int(cur_time.hour % 12)
-        minute = cur_time.minute
-
-        if hour == 0: hour = 12
-
-        if (hour < 10):
-            clk_face.write_digit(0, 0, False)
-            clk_face.write_digit(1, hour, False)
-        else:
-            clk_face.write_digit(0, 1, False)
-            clk_face.write_digit(1, hour % 10, False)
-
-        clk_face.write_digit(2, int(minute / 10), False)
-        clk_face.write_digit(3, int(minute % 10), pm)
+        if (MODE == 0):
+            updt_display();
+	elif (MODE == 1):
+            pass
+	elif (MODE == 2):
+            pass
 
 def bttn_main():
     global MODE
