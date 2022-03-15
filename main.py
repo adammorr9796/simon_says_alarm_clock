@@ -58,15 +58,9 @@ def bttn_main():
     print("bttn_main started")
     GPIO.setmode(GPIO.BCM)
 
-    GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.setup(22, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.setup(27, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-    GPIO.add_event_detect(10, GPIO.FALLING, callback=bttn_callbk, bouncetime=100)
-    GPIO.add_event_detect(22, GPIO.FALLING, callback=bttn_callbk, bouncetime=100)
-    GPIO.add_event_detect(27, GPIO.FALLING, callback=bttn_callbk, bouncetime=100)
-    GPIO.add_event_detect(17, GPIO.FALLING, callback=bttn_callbk, bouncetime=100)
+    for pin in [10,22,27,17]:
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(pin, GPIO.FALLING, callback=bttn_callbk, bouncetime=100)
 
     while(not exit_evt.is_set()):
         if (bttn_evt.is_set() and (cur_bttn == 10 or cur_bttn == 22 or cur_bttn == 17)):
