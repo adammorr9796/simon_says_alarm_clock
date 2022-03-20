@@ -48,6 +48,12 @@ class Display:
         self.i2c_bus.write_byte(self.addr, 0x81) # display on
         self.i2c_bus.write_byte(self.addr, 0xEF) # set brightness to max (15 == 0xF)
 
+    def set_blink(self, rate):
+        if (rate < 0 or rate > 3):
+            return
+        else:
+            self.i2c_bus.write_byte(self.addr, 0x81 | (rate << 1)) # accding to datasheet: 0 == OFF, 1 = 2Hz, 2 == 1Hz, 3 == 0.5Hz
+
     def write_digit(self, digit, num, decimal):
         if (digit < 0 or digit > 3 or num < 0 or num > 9):
             return

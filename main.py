@@ -74,11 +74,11 @@ def clk_main():
         if (mode == ClockMode.CLOCK and cur_bttn_press == 27):
             mode = ClockMode.ALARM
             print(mode)
-            # set_blink(1)
+            clk_face.set_blink(2)
         elif (mode == ClockMode.ALARM and cur_bttn_press == 27):
             mode = ClockMode.CLOCK
             print(mode)
-            # set_blink(0)
+            clk_face.set_blink(0)
 
         # handle clock, alarm, and simon says functionality
         if (mode == ClockMode.CLOCK):
