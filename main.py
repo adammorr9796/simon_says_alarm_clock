@@ -19,6 +19,14 @@ clk_face.write_colon(True)
 cur_time = datetime.now()
 bttn_q = queue.Queue()
 
+bttn_dict = {10:1, 22:2, 27:3, 17:4}
+
+alarm_hour = 12
+alarm_minute = 0
+alarm_pm = False
+alarm_on = False
+cur_alarm_chg = 0
+
 BTTN_0 = 0
 BTTN_1 = 1
 BTTN_2 = 2
@@ -29,19 +37,44 @@ class ClockMode(Enum):
     ALARM = 1
     SIMON = 2
 
-def set_alarm():
-    pass
+def set_alarm(bttn_press):
+    global alarm_hour, alarm_minute, alarm_pm, alarm_on, cur_alarm_chg
 
-def updt_display():
-    cur_time = datetime.now()
+    # change which aspect of the alarm we are modifying: hours, minutes, or am/pm
+    if (bttn_press == 27):
+        cur_alarm_chg = cur_alarm_chg + 1
 
-    pm = True if cur_time.hour >= 12 else False
+    # allow user to cycle through each alarm aspect as many times as they want
+    if (cur_alarm_chg > 2):
+        cur_alarm_chg = 0
 
-    hour = int(cur_time.hour % 12)
-    minute = cur_time.minute
+    if (cur_alarm_chg == 0):
+        if (alarm_hour > 12):
+            alarm_hour = 1
+        if (alarm_hour < 1):
+            alarm_hour = 12
 
-    if hour == 0: hour = 12
+        if (bttn_press == 10):
+            alarm_hour = alarm_hour + 1
+        elif (bttn_press == 17):
+            alarm_hour = alarm_hour - 1
+    elif (cur_alarm_chg == 1):
+        if (alarm_minute > 59):
+            alarm_minute = 0
+        if (alarm_minute < 0):
+            alarm_minute = 59
 
+        if (bttn_press == 10):
+            alarm_minute = alarm_minute + 1
+        elif (bttn_press == 17):
+            alarm_minute = alarm_minute - 1
+    elif (cur_alarm_chg == 2):
+        if (bttn_press == 10 or bttn_press == 17):
+            alarm_pm = True if alarm_pm == False else False
+
+    updt_display(alarm_hour, alarm_minute, alarm_pm)
+
+def updt_display(hour, minute, pm):
     if (hour < 10):
         clk_face.write_digit(0, 0, False)
         clk_face.write_digit(1, hour, False)
@@ -71,22 +104,25 @@ def clk_main():
             cur_bttn_press = None
 
         # set mode logic
-        if (mode == ClockMode.CLOCK and cur_bttn_press == 27):
+        if (mode == ClockMode.CLOCK and cur_bttn_press == 22):
             mode = ClockMode.ALARM
             print(mode)
-            clk_face.set_blink(2)
-        elif (mode == ClockMode.ALARM and cur_bttn_press == 27):
+            clk_face.set_blink(1)
+        elif (mode == ClockMode.ALARM and cur_bttn_press == 22):
             mode = ClockMode.CLOCK
             print(mode)
             clk_face.set_blink(0)
 
         # handle clock, alarm, and simon says functionality
         if (mode == ClockMode.CLOCK):
-            updt_display()
+            cur_time = datetime.now()
+            hr = int(cur_time.hour % 12)
+            if hr == 0: hr = 12
+            updt_display(hr, cur_time.minute, True if cur_time.hour >= 12 else False)
         elif (mode == ClockMode.ALARM):
-            set_alarm()
+            set_alarm(cur_bttn_press)
         elif (mode == ClockMode.SIMON):
-            updt_display()
+            pass
 
 def bttn_main():
     print("bttn_main started")
