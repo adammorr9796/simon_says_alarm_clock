@@ -4,6 +4,7 @@ import display
 from datetime import datetime
 import queue
 import RPi.GPIO as GPIO
+from enum import Enum
 
 exit_evt = threading.Event()
 exit_evt.clear()
@@ -23,7 +24,13 @@ BTTN_1 = 1
 BTTN_2 = 2
 BTTN_3 = 3
 
-MODE = 0       # 0 == CLK_MODE, 1 == ALRM_MODE, 2 == SIMON_MODE
+class ClockMode(Enum):
+    CLOCK = 0
+    ALARM = 1
+    SIMON = 2
+
+def set_alarm():
+    pass
 
 def updt_display():
     cur_time = datetime.now()
@@ -53,18 +60,35 @@ def bttn_callbk(channel):
 def clk_main():
     print("clk_main started")
 
-    global MODE
+    mode = ClockMode.CLOCK
 
     while(not exit_evt.is_set()):
-        if (MODE == 0):
+
+        # check for queued bttn presses
+        if (not bttn_q.empty()):
+            cur_bttn_press = bttn_q.get()
+        else:
+            cur_bttn_press = None
+
+        # set mode logic
+        if (mode == ClockMode.CLOCK and cur_bttn_press == 27):
+            mode = ClockMode.ALARM
+            print(mode)
+            # set_blink(1)
+        elif (mode == ClockMode.ALARM and cur_bttn_press == 27):
+            mode = ClockMode.CLOCK
+            print(mode)
+            # set_blink(0)
+
+        # handle clock, alarm, and simon says functionality
+        if (mode == ClockMode.CLOCK):
             updt_display()
-        elif (MODE == 1):
-            pass
-        elif (MODE == 2):
+        elif (mode == ClockMode.ALARM):
+            set_alarm()
+        elif (mode == ClockMode.SIMON):
             updt_display()
 
 def bttn_main():
-    global MODE
     print("bttn_main started")
     GPIO.setmode(GPIO.BCM)
 
@@ -73,22 +97,26 @@ def bttn_main():
         GPIO.add_event_detect(pin, GPIO.FALLING, callback=bttn_callbk, bouncetime=100)
 
     while(not exit_evt.is_set()):
-        if (bttn_evt.is_set() and (cur_bttn == 10 or cur_bttn == 22 or cur_bttn == 17)):
+        if (bttn_evt.is_set()):
             bttn_q.put(cur_bttn)
             bttn_evt.clear()
-        elif (bttn_evt.is_set() and cur_bttn == 27):
-            if (MODE == 0):
-                #if in CLK_MODE
-                #set_blink(0)
-                MODE = 1 #set to ALRM_MODE
-            elif (MODE == 1):
-                #if in ALRM_MODE
-                #set_blink(1)
-                MODE = 0
-            elif (MODE == 2):
-                #if in SIMON_MODE
-                bttn_q.put(27)
-            bttn_evt.clear()
+
+       # if (bttn_evt.is_set() and (cur_bttn == 10 or cur_bttn == 22 or cur_bttn == 17)):
+       #     bttn_q.put(cur_bttn)
+       #     bttn_evt.clear()
+       # elif (bttn_evt.is_set() and cur_bttn == 27):
+       #     if (MODE == 0):
+       #         #if in CLK_MODE
+       #         #set_blink(0)
+       #         MODE = 1 #set to ALRM_MODE
+       #     elif (MODE == 1):
+       #         #if in ALRM_MODE
+       #         #set_blink(1)
+       #         MODE = 0
+       #     elif (MODE == 2):
+       #         #if in SIMON_MODE
+       #         bttn_q.put(27)
+       #     bttn_evt.clear()
 
 clk_thread = threading.Thread(target=clk_main)
 bttn_thread = threading.Thread(target=bttn_main)
