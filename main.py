@@ -12,6 +12,9 @@ exit_evt.clear()
 bttn_evt = threading.Event()
 bttn_evt.clear()
 
+simon_begin_evt = threading.Event()
+simon_begin_evt.clear()
+
 clk_face = display.Display(0x70, 1)
 clk_face.setup()
 clk_face.write_colon(True)
@@ -32,10 +35,23 @@ BTTN_1 = 1
 BTTN_2 = 2
 BTTN_3 = 3
 
+
+
 class ClockMode(Enum):
     CLOCK = 0
     ALARM = 1
     SIMON = 2
+
+def simon_main():
+    print("simon_main started")
+
+    while (not exit_evt.is_set()):
+        while(not simon_begin_evt.is_set()):
+            # hold here after win condition met
+            pass
+        while(simon_begin_evt.is_set()):
+            # once meet win condition -> simon_begin_evt.clear()
+            pass
 
 def set_alarm(bttn_press):
     global alarm_hour, alarm_minute, alarm_pm, alarm_on, cur_alarm_chg
@@ -93,6 +109,8 @@ def bttn_callbk(channel):
 def clk_main():
     print("clk_main started")
 
+    global alarm_hour, alarm_minute, alarm_pm, alarm_on
+
     mode = ClockMode.CLOCK
 
     while(not exit_evt.is_set()):
@@ -108,7 +126,11 @@ def clk_main():
             mode = ClockMode.ALARM
             print(mode)
             clk_face.set_blink(1)
+        elif (mode == ClockMode.CLOCK and cur_bttn_press == 27):
+            # set alarm state if user presses third button
+            alarm_on = True if alarm_on == False else False
         elif (mode == ClockMode.ALARM and cur_bttn_press == 22):
+            alarm_on = True
             mode = ClockMode.CLOCK
             print(mode)
             clk_face.set_blink(0)
@@ -118,11 +140,18 @@ def clk_main():
             cur_time = datetime.now()
             hr = int(cur_time.hour % 12)
             if hr == 0: hr = 12
-            updt_display(hr, cur_time.minute, True if cur_time.hour >= 12 else False)
+            pm = True if cur_time.hour >= 12 else False
+
+            updt_display(hr, cur_time.minute, pm)
+
+            if (alarm_on == True and int(hr) == int(alarm_hour) and int(cur_time.minute) == int(alarm_minute) and pm == alarm_pm and not simon_begin_evt.is_set()):
+                mode = ClockMode.SIMON
         elif (mode == ClockMode.ALARM):
             set_alarm(cur_bttn_press)
         elif (mode == ClockMode.SIMON):
-            pass
+            simon_begin_evt.set()
+            mode = ClockMode.CLOCK
+            print("started simon game")
 
 def bttn_main():
     print("bttn_main started")
@@ -137,25 +166,10 @@ def bttn_main():
             bttn_q.put(cur_bttn)
             bttn_evt.clear()
 
-       # if (bttn_evt.is_set() and (cur_bttn == 10 or cur_bttn == 22 or cur_bttn == 17)):
-       #     bttn_q.put(cur_bttn)
-       #     bttn_evt.clear()
-       # elif (bttn_evt.is_set() and cur_bttn == 27):
-       #     if (MODE == 0):
-       #         #if in CLK_MODE
-       #         #set_blink(0)
-       #         MODE = 1 #set to ALRM_MODE
-       #     elif (MODE == 1):
-       #         #if in ALRM_MODE
-       #         #set_blink(1)
-       #         MODE = 0
-       #     elif (MODE == 2):
-       #         #if in SIMON_MODE
-       #         bttn_q.put(27)
-       #     bttn_evt.clear()
-
 clk_thread = threading.Thread(target=clk_main)
 bttn_thread = threading.Thread(target=bttn_main)
+simon_thread = threading.Thread(target=simon_main)
 
 clk_thread.start()
 bttn_thread.start()
+simon_thread.start()
