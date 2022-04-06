@@ -76,7 +76,7 @@ def simon_main():
             win = False
             pattern = [bttn_arr[random.randint(0, 3)] for _ in range(10)] # generate random pattern of bttn presses
             print(pattern)
-            difficulty = 4 #random.randint(3,10) # user must play up to a certain number of button presses each time
+            difficulty = random.randint(3,10) # user must play up to a certain number of button presses each time
             print(difficulty)
             cur_level = 1
             cur_speed = 1.0
